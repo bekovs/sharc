@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useMovieStore, MovieStatus } from '../../store/movieStore';
 
 interface MovieDetails {
   id: number;
@@ -19,9 +20,12 @@ interface MovieDetails {
 
 export default function MovieDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const [movie, setMovie] = useState<MovieDetails | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  const { movies: savedMovies, addMovie, removeMovie, updateMovieStatus, updateMovieRating } = useMovieStore();
+  
+  const savedMovie = savedMovies.find((m) => m.id === Number(params.id));
 
   useEffect(() => {
     const fetchMovie = async () => {
@@ -67,9 +71,23 @@ export default function MovieDetailPage() {
     return `${process.env.NEXT_PUBLIC_TMDB_IMAGE_BASE_URL}/w1280${path}`;
   };
 
+  const handleAddMovie = (status: MovieStatus) => {
+    addMovie({
+      id: movie.id,
+      title: movie.title,
+      poster_path: movie.poster_path,
+      release_date: movie.release_date,
+    }, status);
+  };
+
+  const handleRatingClick = (rating: number) => {
+    if (savedMovie) {
+      updateMovieRating(movie.id, rating);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-gray-950 text-white">
-      {/* Backdrop */}
       {movie.backdrop_path && (
         <div className="relative w-full h-96 mb-8">
           <Image
@@ -90,7 +108,6 @@ export default function MovieDetailPage() {
         </Link>
 
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Poster */}
           <div className="flex-shrink-0">
             {getPosterUrl(movie.poster_path) ? (
               <Image
@@ -107,7 +124,6 @@ export default function MovieDetailPage() {
             )}
           </div>
 
-          {/* Info */}
           <div className="flex-1">
             <h1 className="text-4xl font-bold mb-2">{movie.title}</h1>
             <div className="flex items-center gap-4 text-gray-400 mb-4">
@@ -127,6 +143,102 @@ export default function MovieDetailPage() {
                 </span>
               ))}
             </div>
+
+            {/* Add to list buttons */}
+            {!savedMovie ? (
+              <div className="mb-6">
+                <p className="text-sm text-gray-400 mb-2">Add to:</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleAddMovie('watchList')}
+                    className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-sm"
+                  >
+                    📋 Watchlist
+                  </button>
+                  <button
+                    onClick={() => handleAddMovie('watching')}
+                    className="px-4 py-2 rounded bg-yellow-600 hover:bg-yellow-700 text-sm"
+                  >
+                    ▶️ Watching
+                  </button>
+                  <button
+                    onClick={() => handleAddMovie('watched')}
+                    className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-sm"
+                  >
+                    ✓ Watched
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="mb-6">
+                <div className="flex items-center gap-4 mb-4">
+                  <span className="text-sm text-gray-400">Status:</span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => updateMovieStatus(movie.id, 'watchList')}
+                      className={`px-3 py-1 rounded text-sm ${
+                        savedMovie.status === 'watchList'
+                          ? 'bg-blue-600'
+                          : 'bg-gray-700 hover:bg-gray-600'
+                      }`}
+                    >
+                      📋 Watchlist
+                    </button>
+                    <button
+                      onClick={() => updateMovieStatus(movie.id, 'watching')}
+                      className={`px-3 py-1 rounded text-sm ${
+                        savedMovie.status === 'watching'
+                          ? 'bg-yellow-600'
+                          : 'bg-gray-700 hover:bg-gray-600'
+                      }`}
+                    >
+                      ▶️ Watching
+                    </button>
+                    <button
+                      onClick={() => updateMovieStatus(movie.id, 'watched')}
+                      className={`px-3 py-1 rounded text-sm ${
+                        savedMovie.status === 'watched'
+                          ? 'bg-green-600'
+                          : 'bg-gray-700 hover:bg-gray-600'
+                      }`}
+                    >
+                      ✓ Watched
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => removeMovie(movie.id)}
+                    className="ml-auto px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm"
+                  >
+                    Remove
+                  </button>
+                </div>
+
+                {/* Rating */}
+                <div>
+                  <p className="text-sm text-gray-400 mb-2">Your rating:</p>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => handleRatingClick(star)}
+                        className={`w-8 h-8 rounded transition-colors ${
+                          savedMovie.rating && star <= savedMovie.rating
+                            ? 'bg-yellow-500 hover:bg-yellow-600'
+                            : 'bg-gray-700 hover:bg-gray-600'
+                        }`}
+                      >
+                        {star}
+                      </button>
+                    ))}
+                  </div>
+                  {savedMovie.rating && (
+                    <p className="text-sm text-gray-400 mt-2">
+                      You rated this movie {savedMovie.rating}/10
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div>
               <h2 className="text-xl font-semibold mb-2">Overview</h2>

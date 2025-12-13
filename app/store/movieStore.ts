@@ -8,13 +8,15 @@ interface Movie {
   poster_path: string | null;
   release_date: string;
   status: MovieStatus;
+  rating?: number;
 }
 
 interface MovieStore {
   movies: Movie[];
-  addMovie: (movie: Omit<Movie, 'status'>, status?: MovieStatus) => void;
+  addMovie: (movie: Omit<Movie, 'status' | 'rating'>, status?: MovieStatus) => void;
   removeMovie: (id: number) => void;
   updateMovieStatus: (id: number, status: MovieStatus) => void;
+  updateMovieRating: (id: number, rating: number) => void;
 }
 
 export const useMovieStore = create<MovieStore>()(
@@ -34,7 +36,13 @@ export const useMovieStore = create<MovieStore>()(
           movies: state.movies.map((m) => 
             m.id === id ? { ...m, status } : m
           )
-        }))
+        })),
+      updateMovieRating: (id, rating) => 
+        set((state) => ({
+          movies: state.movies.map((m) =>
+            m.id === id ? { ...m, rating } : m
+          )
+        })),
     }),
     {
       name: 'sharc-movies',
