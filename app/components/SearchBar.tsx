@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useMovieStore } from '../store/movieStore';
+import { useMovieStore, MovieStatus } from '../store/movieStore';
 import Image from 'next/image';
 
 interface Movie {
@@ -52,6 +52,10 @@ export default function SearchBar() {
     return `${process.env.NEXT_PUBLIC_TMDB_IMAGE_BASE_URL}/w200${posterPath}`;
   };
 
+  const handleAddMovie = (movie: Movie, status: MovieStatus) => {
+    addMovie(movie, status);
+  };
+
   return (
     <div className="w-full max-w-2xl">
       <input
@@ -85,17 +89,35 @@ export default function SearchBar() {
                 <p className="font-semibold">{movie.title}</p>
                 <p className="text-sm text-gray-400">{movie.release_date?.slice(0, 4)}</p>
               </div>
-              <button
-                onClick={() => addMovie(movie)}
-                disabled={isMovieSaved(movie.id)}
-                className={`px-4 py-2 rounded whitespace-nowrap ${
-                  isMovieSaved(movie.id)
-                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
-                }`}
-              >
-                {isMovieSaved(movie.id) ? 'Added' : 'Add'}
-              </button>
+              {isMovieSaved(movie.id) ? (
+                <span className="px-4 py-2 rounded bg-gray-600 text-gray-400 text-sm">
+                  Added
+                </span>
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleAddMovie(movie, 'watchList')}
+                    className="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                    title="Want to Watch"
+                  >
+                    📋
+                  </button>
+                  <button
+                    onClick={() => handleAddMovie(movie, 'watching')}
+                    className="px-3 py-2 rounded bg-yellow-600 hover:bg-yellow-700 text-white text-sm"
+                    title="Watching"
+                  >
+                    ▶️
+                  </button>
+                  <button
+                    onClick={() => handleAddMovie(movie, 'watched')}
+                    className="px-3 py-2 rounded bg-green-600 hover:bg-green-700 text-white text-sm"
+                    title="Watched"
+                  >
+                    ✓
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
