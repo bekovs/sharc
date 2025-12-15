@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useMovieStore, MovieStatus } from '../../store/movieStore';
 
 interface MovieDetails {
@@ -20,6 +19,7 @@ interface MovieDetails {
 
 export default function MovieDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const [movie, setMovie] = useState<MovieDetails | null>(null);
   const [loading, setLoading] = useState(true);
   
@@ -100,12 +100,12 @@ export default function MovieDetailPage() {
       )}
 
       <div className="max-w-6xl mx-auto px-8 -mt-64 relative z-10">
-        <Link 
-          href="/my-movies" 
+        <button
+          onClick={() => router.back()}
           className="inline-block mb-6 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded"
         >
           ← Back
-        </Link>
+        </button>
 
         <div className="flex flex-col md:flex-row gap-8">
           <div className="flex-shrink-0">
