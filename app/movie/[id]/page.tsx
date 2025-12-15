@@ -68,7 +68,9 @@ export default function MovieDetailPage() {
 
   const getBackdropUrl = (path: string | null) => {
     if (!path) return null;
-    return `${process.env.NEXT_PUBLIC_TMDB_IMAGE_BASE_URL}/w1280${path}`;
+    const url = `${process.env.NEXT_PUBLIC_TMDB_IMAGE_BASE_URL}/w1280${path}`;
+    console.log('Generated backdrop URL:', url);
+    return url;
   };
 
   const handleAddMovie = (status: MovieStatus) => {
@@ -89,25 +91,31 @@ export default function MovieDetailPage() {
   return (
     <main className="min-h-screen bg-gray-950 text-white">
       {movie.backdrop_path && (
-        <div className="relative w-full h-96 mb-8">
-          <Image
+        <div className="absolute top-0 left-0 w-full h-[500px] z-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={getBackdropUrl(movie.backdrop_path)!}
-            alt={movie.title}
-            fill
-            className="object-cover opacity-30"
+            alt=""
+            className="w-full h-full object-cover"
+            style={{ opacity: 0.5 }}
           />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-950/50 to-gray-950" />
         </div>
       )}
 
-      <div className="max-w-6xl mx-auto px-8 -mt-64 relative z-10">
-        <button
+      <div className="relative z-10 max-w-6xl mx-auto px-8 pt-8 pb-16">
+        <button 
           onClick={() => router.back()}
-          className="inline-block mb-6 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded"
+          className="inline-flex items-center gap-2 mb-8 px-4 py-2 bg-gray-800/80 backdrop-blur-sm hover:bg-gray-700 rounded transition-colors"
         >
-          ← Back
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back
         </button>
 
         <div className="flex flex-col md:flex-row gap-8">
+          {/* poster */}
           <div className="flex-shrink-0">
             {getPosterUrl(movie.poster_path) ? (
               <Image
@@ -118,14 +126,16 @@ export default function MovieDetailPage() {
                 className="rounded-lg shadow-2xl"
               />
             ) : (
-              <div className="w-[300px] h-[450px] bg-gray-700 rounded-lg flex items-center justify-center">
+              <div className="w-[300px] h-[450px] bg-gray-800 rounded-lg flex items-center justify-center">
                 <span className="text-gray-500">No poster</span>
               </div>
             )}
           </div>
 
+          {/* Info */}
           <div className="flex-1">
             <h1 className="text-4xl font-bold mb-2">{movie.title}</h1>
+            
             <div className="flex items-center gap-4 text-gray-400 mb-4">
               <span>{movie.release_date?.slice(0, 4)}</span>
               <span>•</span>
@@ -136,34 +146,34 @@ export default function MovieDetailPage() {
               </span>
             </div>
 
-            <div className="flex gap-2 mb-6">
+            {/* Жанры */}
+            <div className="flex flex-wrap gap-2 mb-6">
               {movie.genres.map((genre) => (
-                <span key={genre.id} className="px-3 py-1 bg-gray-800 rounded-full text-sm">
+                <span key={genre.id} className="px-3 py-1 bg-gray-800/80 backdrop-blur-sm rounded-full text-sm">
                   {genre.name}
                 </span>
               ))}
             </div>
 
-            {/* Add to list buttons */}
             {!savedMovie ? (
               <div className="mb-6">
                 <p className="text-sm text-gray-400 mb-2">Add to:</p>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => handleAddMovie('watchList')}
-                    className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-sm"
+                    className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-sm transition-colors"
                   >
                     📋 Watchlist
                   </button>
                   <button
                     onClick={() => handleAddMovie('watching')}
-                    className="px-4 py-2 rounded bg-yellow-600 hover:bg-yellow-700 text-sm"
+                    className="px-4 py-2 rounded bg-yellow-600 hover:bg-yellow-700 text-sm transition-colors"
                   >
                     ▶️ Watching
                   </button>
                   <button
                     onClick={() => handleAddMovie('watched')}
-                    className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-sm"
+                    className="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-sm transition-colors"
                   >
                     ✓ Watched
                   </button>
@@ -171,57 +181,56 @@ export default function MovieDetailPage() {
               </div>
             ) : (
               <div className="mb-6">
-                <div className="flex items-center gap-4 mb-4">
+                {/* status */}
+                <div className="flex flex-wrap items-center gap-2 mb-4">
                   <span className="text-sm text-gray-400">Status:</span>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => updateMovieStatus(movie.id, 'watchList')}
-                      className={`px-3 py-1 rounded text-sm ${
-                        savedMovie.status === 'watchList'
-                          ? 'bg-blue-600'
-                          : 'bg-gray-700 hover:bg-gray-600'
-                      }`}
-                    >
-                      📋 Watchlist
-                    </button>
-                    <button
-                      onClick={() => updateMovieStatus(movie.id, 'watching')}
-                      className={`px-3 py-1 rounded text-sm ${
-                        savedMovie.status === 'watching'
-                          ? 'bg-yellow-600'
-                          : 'bg-gray-700 hover:bg-gray-600'
-                      }`}
-                    >
-                      ▶️ Watching
-                    </button>
-                    <button
-                      onClick={() => updateMovieStatus(movie.id, 'watched')}
-                      className={`px-3 py-1 rounded text-sm ${
-                        savedMovie.status === 'watched'
-                          ? 'bg-green-600'
-                          : 'bg-gray-700 hover:bg-gray-600'
-                      }`}
-                    >
-                      ✓ Watched
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => updateMovieStatus(movie.id, 'watchList')}
+                    className={`px-3 py-1 rounded text-sm transition-colors ${
+                      savedMovie.status === 'watchList'
+                        ? 'bg-blue-600'
+                        : 'bg-gray-700 hover:bg-gray-600'
+                    }`}
+                  >
+                    📋 Watchlist
+                  </button>
+                  <button
+                    onClick={() => updateMovieStatus(movie.id, 'watching')}
+                    className={`px-3 py-1 rounded text-sm transition-colors ${
+                      savedMovie.status === 'watching'
+                        ? 'bg-yellow-600'
+                        : 'bg-gray-700 hover:bg-gray-600'
+                    }`}
+                  >
+                    ▶️ Watching
+                  </button>
+                  <button
+                    onClick={() => updateMovieStatus(movie.id, 'watched')}
+                    className={`px-3 py-1 rounded text-sm transition-colors ${
+                      savedMovie.status === 'watched'
+                        ? 'bg-green-600'
+                        : 'bg-gray-700 hover:bg-gray-600'
+                    }`}
+                  >
+                    ✓ Watched
+                  </button>
                   <button
                     onClick={() => removeMovie(movie.id)}
-                    className="ml-auto px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm"
+                    className="ml-auto px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm transition-colors"
                   >
                     Remove
                   </button>
                 </div>
 
-                {/* Rating */}
+                {/* rating */}
                 <div>
                   <p className="text-sm text-gray-400 mb-2">Your rating:</p>
-                  <div className="flex gap-1">
+                  <div className="flex flex-wrap gap-1">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
                       <button
                         key={star}
                         onClick={() => handleRatingClick(star)}
-                        className={`w-8 h-8 rounded transition-colors ${
+                        className={`w-9 h-9 rounded transition-colors ${
                           savedMovie.rating && star <= savedMovie.rating
                             ? 'bg-yellow-500 hover:bg-yellow-600'
                             : 'bg-gray-700 hover:bg-gray-600'
@@ -240,8 +249,9 @@ export default function MovieDetailPage() {
               </div>
             )}
 
+            {/* Overview */}
             <div>
-              <h2 className="text-xl font-semibold mb-2">Overview</h2>
+              <h2 className="text-xl font-semibold mb-3">Overview</h2>
               <p className="text-gray-300 leading-relaxed">{movie.overview}</p>
             </div>
           </div>
