@@ -1,9 +1,10 @@
 'use client';
 
-import { useMovieStore, MovieStatus } from '../store/movieStore';
+import { useMovieStore } from '../store/movieStore';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, useMemo } from 'react';
+import type { MovieStatus } from '@/types/movie';
 
 export default function MyMoviesPage() {
   const { movies, removeMovie } = useMovieStore();
