@@ -4,13 +4,10 @@ import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-
-interface Movie {
-  id: number;
-  title: string;
-  poster_path: string | null;
-  release_date: string;
-}
+import { supabase } from '@/lib/supabase';
+import type { User } from '@supabase/supabase-js';
+import type { Movie } from '@/types/movie';
+import { useMovieStore } from '../store/movieStore';
 
 export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,6 +16,7 @@ export default function Navbar() {
   const [loading, setLoading] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const searchMovies = async () => {
@@ -58,6 +56,26 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+      if (user) {
+        useMovieStore.getState().fetchMovies();
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        useMovieStore.getState().fetchMovies();
+      } else {
+        useMovieStore.setState({ movies: [], initialized: false });
+      }
+    })
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -75,6 +93,12 @@ export default function Navbar() {
   const handleMovieClick = () => {
     setSearchQuery('');
     setShowResults(false);
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/auth/login');
+    router.refresh();
   };
 
   return (
@@ -150,12 +174,29 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-4">
-            <Link
-              href="/my-movies"
-              className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-semibold transition-colors"
-            >
-              My Movies
-            </Link>
+            {user ? (
+              <>
+                <Link
+                  href="/my-movies"
+                  className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-semibold transition-colors"
+                >
+                  My Movies
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 bg-gray-800 text-white hover:bg-gray-700 rounded-lg font-semibold transition-colors"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/auth/login"
+                className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg font-semibold transition-colors"
+              >
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       </div>

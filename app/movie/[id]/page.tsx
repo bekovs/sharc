@@ -3,19 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { useMovieStore, MovieStatus } from '../../store/movieStore';
-
-interface MovieDetails {
-  id: number;
-  title: string;
-  poster_path: string | null;
-  backdrop_path: string | null;
-  release_date: string;
-  runtime: number;
-  vote_average: number;
-  overview: string;
-  genres: { id: number; name: string }[];
-}
+import { useMovieStore } from '../../store/movieStore';
+import type { MovieDetails, MovieStatus } from '@/types/movie';
 
 export default function MovieDetailPage() {
   const params = useParams();
@@ -79,6 +68,7 @@ export default function MovieDetailPage() {
       title: movie.title,
       poster_path: movie.poster_path,
       release_date: movie.release_date,
+      vote_average: movie.vote_average,
     }, status);
   };
 
